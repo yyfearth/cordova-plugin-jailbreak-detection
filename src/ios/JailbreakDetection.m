@@ -10,14 +10,14 @@
 
 @implementation JailbreakDetection
 
-- (void) isJailbroken:(CDVInvokedUrlCommand*)command;
+- (void) detectJailbreak:(CDVInvokedUrlCommand*)command;
 {
     CDVPluginResult *pluginResult;
 
     @try
     {
-        bool jailbroken = [self jailbroken];
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsBool:jailbroken];
+        NSString* jailbroken = [self jailbroken];
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:jailbroken];
     }
     @catch (NSException *exception)
     {
@@ -29,29 +29,23 @@
     }
 }
 
-- (bool) jailbroken {
+- (NSString*) jailbroken {
 
 #if !(TARGET_IPHONE_SIMULATOR)
 
-    if ([[NSFileManager defaultManager] fileExistsAtPath:@"/Applications/Cydia.app"])
+    NSArray *paths = [NSArray arrayWithObjects:
+                      @"/Applications/Cydia.app",
+                      @"/Library/MobileSubstrate/MobileSubstrate.dylib",
+                      @"/bin/bash",
+                      @"/usr/sbin/sshd",
+                      @"/etc/apt",
+                      nil];
+    for (NSString *path in paths)
     {
-        return YES;
-    }
-    else if ([[NSFileManager defaultManager] fileExistsAtPath:@"/Library/MobileSubstrate/MobileSubstrate.dylib"])
-    {
-        return YES;
-    }
-    else if ([[NSFileManager defaultManager] fileExistsAtPath:@"/bin/bash"])
-    {
-        return YES;
-    }
-    else if ([[NSFileManager defaultManager] fileExistsAtPath:@"/usr/sbin/sshd"])
-    {
-        return YES;
-    }
-    else if ([[NSFileManager defaultManager] fileExistsAtPath:@"/etc/apt"])
-    {
-        return YES;
+        if ([[NSFileManager defaultManager] fileExistsAtPath:path])
+        {
+            return [NSString stringWithFormat:@"existence of %@", path];
+        }
     }
 
     NSError *error;
@@ -59,25 +53,21 @@
     NSString *testWritePath = @"/private/jailbreaktest.txt";
 
     [testWriteText writeToFile:testWritePath atomically:YES encoding:NSUTF8StringEncoding error:&error];
+    [[NSFileManager defaultManager] removeItemAtPath:testWritePath error:nil];
 
     if (error == nil)
     {
-        [[NSFileManager defaultManager] removeItemAtPath:testWritePath error:nil];
-        return YES;
-    }
-    else
-    {
-        [[NSFileManager defaultManager] removeItemAtPath:testWritePath error:nil];
+        return @"writable to /private";
     }
 
     if ([[UIApplication sharedApplication] canOpenURL:[NSURL URLWithString:@"cydia://package/com.example.package"]])
     {
-        return YES;
+        return @"can open url scheme cydia://";
     }
 
 #endif
 
-    return NO;
+    return @"";
 }
 
 @end

@@ -8,6 +8,6 @@
 
 @interface JailbreakDetection : CDVPlugin
 
-- (void) isJailbroken:(CDVInvokedUrlCommand*)command;
+- (void) detectJailbreak:(CDVInvokedUrlCommand*)command;
 
 @end

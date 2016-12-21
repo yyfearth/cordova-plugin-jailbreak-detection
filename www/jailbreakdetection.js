@@ -1,12 +1,16 @@
 
-var exec = require("cordova/exec");
+var exec = require('cordova/exec');
 
-var JailbreakDetection = function () {
-    this.name = "JailbreakDetection";
+module.exports = {
+    name: 'JailbreakDetection',
+    detectJailbreak: function() {
+        return new Promise(function(resolve, reject) {
+            exec(resolve, reject, 'JailbreakDetection', 'detectJailbreak', []);
+        });
+    },
+    isJailbroken: function(successCallback, failureCallback) { // for backward compatibility
+        exec(function(reason) {
+            successCallback(!!reason);
+        }, failureCallback, 'JailbreakDetection', 'detectJailbreak', []);
+    }
 };
-
-JailbreakDetection.prototype.isJailbroken = function (successCallback, failureCallback) {
-    exec(successCallback, failureCallback, "JailbreakDetection", "isJailbroken", []);
-};
-
-module.exports = new JailbreakDetection();
